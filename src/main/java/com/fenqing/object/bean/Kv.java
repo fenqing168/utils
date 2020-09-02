@@ -1,11 +1,15 @@
 package com.fenqing.object.bean;
 
-import lombok.Data;
+import lombok.*;
 
 /**
  * @author fenqing
  */
-@Data
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class Kv<K, V>{
     private K k;
     private V v;

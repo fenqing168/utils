@@ -6,19 +6,13 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * 标识一个表里的字段
+ * 标识一个表的范围
  * @author fenqing
  */
-@Target(ElementType.FIELD)
+@Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ExcelField {
+public @interface ExcelSheet {
 
-    String coordinate() default "";
-
-    String x() default "A";
-
-    boolean img() default false;
-
-    int sort() default 0;
+    int sheet();
 
 }

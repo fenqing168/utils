@@ -11,5 +11,5 @@ import java.lang.reflect.Field;
 @Data
 public class FieldConfig{
     private Field field;
-    private boolean isImgs;
+    private boolean img;
 }

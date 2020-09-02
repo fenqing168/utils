@@ -19,7 +19,6 @@ import java.util.Map;
 public class ExcelXlsxUtils<T> extends BaseExcelUtils<T> {
 
     public ExcelXlsxUtils (InputStream is, Class<T> clazz, boolean clearEmpty) {
-        super(is, clazz, clearEmpty);
         this.clazz = clazz;
         try {
             this.workbook = new XSSFWorkbook(is);
@@ -59,6 +58,11 @@ public class ExcelXlsxUtils<T> extends BaseExcelUtils<T> {
             }
         }
         return result;
+    }
+
+    @Override
+    protected <TT> ExcelUtils<TT> getExcelUtil(byte[] bytes, Class<TT> tClass, boolean clearEmpty) {
+        return null;
     }
 }
 
