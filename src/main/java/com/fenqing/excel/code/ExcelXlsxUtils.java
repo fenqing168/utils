@@ -1,10 +1,14 @@
 package com.fenqing.excel.code;
 
+import com.fenqing.excel.annotation.ExcelData;
+import com.fenqing.excel.annotation.ExcelSheet;
+import com.fenqing.io.code.IoUtils;
 import org.apache.poi.POIXMLDocumentPart;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.*;
 import org.openxmlformats.schemas.drawingml.x2006.spreadsheetDrawing.CTMarker;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -19,12 +23,34 @@ import java.util.Map;
 public class ExcelXlsxUtils<T> extends BaseExcelUtils<T> {
 
     public ExcelXlsxUtils (InputStream is, Class<T> clazz, boolean clearEmpty) {
-        this.clazz = clazz;
+        byte[] bytes = IoUtils.getBytes(is);
+        Workbook workbook;
+        int clazzType;
+        int sheet;
+        ExcelSheet excelSheet = clazz.getAnnotation(ExcelSheet.class);
+        ExcelData excelData = clazz.getAnnotation(ExcelData.class);
+        if(excelSheet != null){
+            clazzType = 1;
+            sheet = excelSheet.sheet();
+        }else if(excelData != null){
+            clazzType = 2;
+            sheet = excelData.sheet();
+        }else{
+            throw new RuntimeException("类上请标注@ExcelSheet或者@ExcelData");
+        }
         try {
-            this.workbook = new XSSFWorkbook(is);
+            workbook = new XSSFWorkbook(new ByteArrayInputStream(bytes));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        init(
+                bytes,
+                workbook,
+                clazz,
+                clazzType,
+                sheet,
+                clearEmpty
+        );
         loadClass();
     }
 
@@ -62,7 +88,7 @@ public class ExcelXlsxUtils<T> extends BaseExcelUtils<T> {
 
     @Override
     protected <TT> ExcelUtils<TT> getExcelUtil(byte[] bytes, Class<TT> tClass, boolean clearEmpty) {
-        return null;
+        return ExcelUtils.getExcelUtil(bytes, "xlsx", tClass, clearEmpty);
     }
 }
 
