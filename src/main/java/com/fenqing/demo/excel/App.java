@@ -37,4 +37,12 @@ public class App {
         System.out.println(productImport);
     }
 
+    @Test
+    public void test4() throws IOException {
+        byte[] bytes = IoUtils.getBytes("D:\\file\\temp\\excel\\导入\\和阳精密QC数据系统功能需求.xlsx");
+        ExcelUtils<ExcelProductBean> xls = ExcelUtils.getExcelUtil(bytes, "xlsx", ExcelProductBean.class, true);
+        ExcelProductBean productImport = xls.readData((a, b) -> "图片");
+        System.out.println(productImport);
+    }
+
 }

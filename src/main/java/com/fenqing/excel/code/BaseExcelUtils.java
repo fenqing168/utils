@@ -286,8 +286,8 @@ public abstract class BaseExcelUtils<T> implements ExcelUtils<T> {
                 if (!img) {
                     int x = k.getK();
                     int y = k.getV();
-                    Row row = sheet.getRow(x);
-                    Cell cell = row.getCell(y);
+                    Row row = sheet.getRow(y);
+                    Cell cell = row.getCell(x);
                     cell.setCellType(CellType.STRING);
                     String stringCellValue = cell.getStringCellValue();
                     v.getField().set(t, stringCellValue);
