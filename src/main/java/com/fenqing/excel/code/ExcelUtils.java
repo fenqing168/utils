@@ -1,9 +1,7 @@
 package com.fenqing.excel.code;
 
-import com.fenqing.demo.excel.BaseDataDto;
 import com.fenqing.excel.enumeration.ExcelFileTypeEnum;
 import com.fenqing.excel.function.UploadFile;
-import com.fenqing.math.code.MathUtils;
 import com.fenqing.object.bean.Kv;
 import org.apache.poi.hssf.util.CellReference;
 
@@ -103,6 +101,8 @@ public interface ExcelUtils<T> {
         }
         return result;
     }
+
+
 
 }
 

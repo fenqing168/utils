@@ -507,6 +507,17 @@ public class DataUtils {
         }
     }
 
+    /**
+     * 是否为结构语法
+     */
+    public static boolean isArray(String text, Map<String, Object> data){
+        Object o = data.get(text);
+        if(o != null){
+            return o.getClass().isArray() || o instanceof Iterable;
+        }
+        return false;
+    }
+
 
 }
 

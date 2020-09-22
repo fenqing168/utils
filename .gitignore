@@ -4,3 +4,4 @@ target
 # jetbrains
 .idea
 *.iml
+*.class

@@ -69,4 +69,31 @@ public class IoUtils {
         return true;
     }
 
+    public static void copy(InputStream is, OutputStream os) {
+        int len;
+        byte[] bytes = new byte[1024 * 10];
+        try{
+            while ((len = is.read(bytes))  != -1){
+                os.write(bytes, 0, len);
+                os.flush();
+            }
+        }catch (Exception e){
+            throw new RuntimeException(e);
+        }finally {
+            close(os, is);
+        }
+    }
+
+    public static void close(Closeable ...closeables){
+        for (Closeable closeable : closeables) {
+            if(closeable != null){
+                try{
+                    closeable.close();
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+
+        }
+    }
 }
