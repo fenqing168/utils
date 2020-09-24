@@ -13,4 +13,13 @@ public class ArrayUtils {
         return bytes1;
     }
 
+    public static boolean contains(int[] arr, int val){
+        for (int i : arr) {
+            if (i == val){
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

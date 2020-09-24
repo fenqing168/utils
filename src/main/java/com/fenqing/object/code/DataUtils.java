@@ -54,11 +54,11 @@ public class DataUtils {
                     classField.setAccessible(true);
                     return classField.get(o);
                 } catch (Exception e) {
-                    Method getMethod = getGetMethod(clazz, field);
                     try {
+                        Method getMethod = getGetMethod(clazz, field);
                         return getMethod.invoke(o);
                     } catch (Exception ex) {
-                        throw new RuntimeException(e);
+                        return null;
                     }
                 }
             }

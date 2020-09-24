@@ -68,6 +68,7 @@ public abstract class ExcelTemplateUtils {
     private InputStream fill(InputStream is, Map<String, Object> data){
         Workbook workbook = getWorkbook(is);
         Sheet sheet = workbook.getSheetAt(0);
+        Font font = workbook.createFont();
         CellStyle dateStyle = workbook.createCellStyle();
         dateStyle.setDataFormat(workbook.createDataFormat().getFormat("m/d/yy h:mm"));
         dateStyle.setAlignment(HorizontalAlignment.CENTER);
