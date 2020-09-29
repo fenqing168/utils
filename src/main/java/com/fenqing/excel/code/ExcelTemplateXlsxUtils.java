@@ -9,7 +9,7 @@ import java.io.InputStream;
 /**
  * @author fenqing
  */
-public class ExcelTemplateXlsxUtils extends ExcelTemplateUtils{
+public class ExcelTemplateXlsxUtils extends BaseExcelTemplateUtils {
 
     private ExcelTemplateXlsxUtils(){}
 

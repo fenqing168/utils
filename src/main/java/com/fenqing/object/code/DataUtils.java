@@ -20,6 +20,8 @@ import java.util.stream.Collectors;
  */
 public class DataUtils {
 
+    private final static String THIS = "this";
+
     /**
      * 获取对象里属性值
      * @param o     对象
@@ -185,7 +187,7 @@ public class DataUtils {
         Map<Object, ?> map = src.stream().collect(Collectors.toMap(item -> getValue(item, srcMapField), e -> e));
         target.forEach(item -> {
             Object o = map.get(getValue(item, targetMapField));
-            if("this".equals(srcValueField)){
+            if(THIS.equals(srcValueField)){
                 setValue(item, targetValueField, o);
             }else{
                 setValue(item, targetValueField, Optional.ofNullable(o).map(e -> getValue(e, srcValueField)).orElse(null));
@@ -206,7 +208,7 @@ public class DataUtils {
         Map<Object, ?> map = src.stream().collect(Collectors.toMap(item -> getValue(item, srcMapField), e -> e));
         target.forEach(item -> {
             Object o = map.get(getValue(item, targetMapField));
-            if("this".equals(srcValueField)){
+            if(THIS.equals(srcValueField)){
                 setValue(item, targetValueField, Optional.ofNullable(o).orElse(defaultValue));
             }else{
                 setValue(item, targetValueField, Optional.ofNullable(o).map(e -> getValue(e, srcValueField)).orElse(defaultValue));
@@ -219,7 +221,7 @@ public class DataUtils {
         target.forEach(item -> {
             valueMapper.forEach((targetValue, srcValue) -> {
                 Object srcValueObject = map.get(getValue(item, targetMapField));
-                if("this".equals(srcValue)){
+                if(THIS.equals(srcValue)){
                     setValue(item, targetValue, srcValueObject);
                 }else{
                     setValue(item, targetValue, Optional.ofNullable(srcValueObject).map(e -> getValue(e, srcValue)).orElse(null));
@@ -256,7 +258,7 @@ public class DataUtils {
             }
 
             Object setItem;
-            if("this".equals(srcField)){
+            if(THIS.equals(srcField)){
                 setItem = item;
             }else{
                 setItem = getValue(item, srcField);

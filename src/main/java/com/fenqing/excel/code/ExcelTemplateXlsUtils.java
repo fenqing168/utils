@@ -1,8 +1,6 @@
 package com.fenqing.excel.code;
 
-import org.apache.poi.hssf.usermodel.HSSFDataFormat;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.DataFormat;
 import org.apache.poi.ss.usermodel.Workbook;
 
 import java.io.IOException;
@@ -11,7 +9,7 @@ import java.io.InputStream;
 /**
  * @author fenqing
  */
-public class ExcelTemplateXlsUtils extends ExcelTemplateUtils {
+public class ExcelTemplateXlsUtils extends BaseExcelTemplateUtils {
 
     private ExcelTemplateXlsUtils(){}
 

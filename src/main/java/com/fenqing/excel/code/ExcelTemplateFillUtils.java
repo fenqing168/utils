@@ -11,6 +11,8 @@ import java.util.Map;
  */
 public interface ExcelTemplateFillUtils {
 
+    String XLS = "XLS";
+
     /**
      * 数据填充
      * @param data 数据
@@ -67,13 +69,19 @@ public interface ExcelTemplateFillUtils {
     static ExcelTemplateFillUtils getInstance(Object obj, String type){
         type = type.toUpperCase();
         Class<? extends ExcelTemplateFillUtils> clazz;
-        if("XLS".equals(type)){
+        if(XLS.equals(type)){
             clazz = ExcelTemplateFill2003Utils.class;
         }else{
             clazz = ExcelTemplateFill2007Utils.class;
         }
         try {
-            Constructor<? extends ExcelTemplateFillUtils> constructor = clazz.getConstructor(obj.getClass());
+            Constructor<? extends ExcelTemplateFillUtils> constructor;
+            if(obj instanceof InputStream){
+                constructor = clazz.getConstructor(InputStream.class);
+            }else{
+                constructor = clazz.getConstructor(obj.getClass());
+            }
+
             return constructor.newInstance(obj);
         } catch (Exception e) {
             throw new RuntimeException(e);

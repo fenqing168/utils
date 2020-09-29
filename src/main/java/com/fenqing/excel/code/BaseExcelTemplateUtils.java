@@ -1,30 +1,23 @@
 package com.fenqing.excel.code;
 
-import com.fenqing.io.code.IoUtils;
 import com.fenqing.object.code.DataUtils;
-import org.apache.poi.hssf.usermodel.*;
-import org.apache.poi.hssf.util.HSSFColor;
 import org.apache.poi.ss.usermodel.*;
 import org.springframework.core.io.ClassPathResource;
 
 import java.io.*;
-import java.lang.reflect.Array;
 import java.util.*;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * excel数据填充
  * @author fenqing
  */
-public abstract class ExcelTemplateUtils {
+public abstract class BaseExcelTemplateUtils {
 
     /**
      * 导出
      * @return
      */
-    public static ExcelTemplateUtils getInstance(String type){
+    public static BaseExcelTemplateUtils getInstance(String type){
         //将文件类型大写
         type = type.toUpperCase();
         //根据文件类型选择创建实例

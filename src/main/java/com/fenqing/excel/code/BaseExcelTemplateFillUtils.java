@@ -73,64 +73,15 @@ public abstract class BaseExcelTemplateFillUtils implements ExcelTemplateFillUti
         List<Map<String, String>> yKeyMaps = new ArrayList<>();
         for (String key : pageListMap.keySet()) {
             ExcelPageList pageList = pageListMap.get(key);
-            int pageSize = pageList.getPageSize();
             int[] repetitionItemIndexs = pageList.getRepetitionItemIndexs();
             String direction = pageList.getDirection();
 
 
             if ("x".equals(direction)) {
-                List<Object> os = new ArrayList<>();
-                ExcelPageList newPageList = new ExcelPageList(pageSize, direction);
-                if (repetitionItemIndexs != null) {
-                    for (int repetitionItemIndex : repetitionItemIndexs) {
-                        os.add(pageList.get(repetitionItemIndex));
-                    }
-                    for (int i = 0; i < pageList.size(); i++) {
-                        boolean contains = ArrayUtils.contains(repetitionItemIndexs, i);
-                        if (!contains) {
-                            newPageList.add(pageList.get(i));
-                        }
-                    }
-                    pageList = newPageList;
-                } else {
-                    repetitionItemIndexs = new int[]{};
-                }
-
-                for (int i = 0, j = 0; i < pageList.size(); i += pageSize, j++) {
-                    if (xKeyMaps.size() <= j) {
-                        xKeyMaps.add(new HashMap<>(8));
-                    }
-                    Map<String, String> xKeyMap = xKeyMaps.get(j);
-                    String uuid = UUID.randomUUID().toString();
-                    xKeyMap.put(key, uuid);
-                    List<Object> temp;
-                    if (i + pageSize > pageList.size()) {
-                        temp = new ArrayList<>(pageList.subList(i, pageList.size() - 1));
-                    } else {
-                        temp = new ArrayList<>(pageList.subList(i, i + pageSize));
-                    }
-                    for (int z = 0; z < repetitionItemIndexs.length; z++) {
-                        temp.add(repetitionItemIndexs[z], os.get(z));
-                    }
-                    data.put(uuid, temp);
-                }
+                createSheetX(pageList, direction, repetitionItemIndexs, xKeyMaps, key, data);
             }
             if ("y".equals(direction)) {
-                for (int i = 0, j = 0; i < pageList.size(); i += pageSize, j++) {
-                    if (yKeyMaps.size() <= j) {
-                        yKeyMaps.add(new HashMap<>(8));
-                    }
-                    Map<String, String> yKeyMap = yKeyMaps.get(j);
-                    String uuid = UUID.randomUUID().toString();
-                    yKeyMap.put(key, uuid);
-                    List<Object> temp;
-                    if (i + pageSize > pageList.size()) {
-                        temp = new ArrayList<>(pageList.subList(i, pageList.size() - 1));
-                    } else {
-                        temp = new ArrayList<>(pageList.subList(i, i + pageSize));
-                    }
-                    data.put(uuid, temp);
-                }
+                createSheetY(pageList, yKeyMaps, key, data);
             }
         }
         Sheet nowSheet = workbook.getSheetAt(0);
@@ -177,11 +128,77 @@ public abstract class BaseExcelTemplateFillUtils implements ExcelTemplateFillUti
                 }
             }
         }
-        workbook.removeSheetAt(0);
+        if(!xKeyMaps.isEmpty() && !yKeyMaps.isEmpty()){
+            workbook.removeSheetAt(0);
+        }
         return new ArrayList<List<Map<String, String>>>(){{
             add(xKeyMaps);
             add(yKeyMaps);
         }};
+    }
+
+    /**
+     * 生成工作表
+     */
+    private void createSheetX(ExcelPageList pageList, String direction, int[] repetitionItemIndexs, List<Map<String, String>> xKeyMaps, String key, Map<String,  Object> data) {
+        int pageSize = pageList.getPageSize();
+        List<Object> os = new ArrayList<>();
+        ExcelPageList newPageList = new ExcelPageList(pageSize, direction);
+        if (repetitionItemIndexs != null) {
+            for (int repetitionItemIndex : repetitionItemIndexs) {
+                os.add(pageList.get(repetitionItemIndex));
+            }
+            for (int i = 0; i < pageList.size(); i++) {
+                boolean contains = ArrayUtils.contains(repetitionItemIndexs, i);
+                if (!contains) {
+                    newPageList.add(pageList.get(i));
+                }
+            }
+            pageList = newPageList;
+        } else {
+            repetitionItemIndexs = new int[]{};
+        }
+
+        for (int i = 0, j = 0; i < pageList.size(); i += pageSize, j++) {
+            if (xKeyMaps.size() <= j) {
+                xKeyMaps.add(new HashMap<>(8));
+            }
+            Map<String, String> xKeyMap = xKeyMaps.get(j);
+            String uuid = UUID.randomUUID().toString();
+            xKeyMap.put(key, uuid);
+            List<Object> temp;
+            if (i + pageSize > pageList.size()) {
+                temp = new ArrayList<>(pageList.subList(i, pageList.size() - 1));
+            } else {
+                temp = new ArrayList<>(pageList.subList(i, i + pageSize));
+            }
+            for (int z = 0; z < repetitionItemIndexs.length; z++) {
+                temp.add(repetitionItemIndexs[z], os.get(z));
+            }
+            data.put(uuid, temp);
+        }
+    }
+
+    /**
+     * 生成工作表
+     */
+    private void createSheetY(ExcelPageList pageList, List<Map<String, String>> yKeyMaps, String key, Map<String, Object> data) {
+        int pageSize = pageList.getPageSize();
+        for (int i = 0, j = 0; i < pageList.size(); i += pageSize, j++) {
+            if (yKeyMaps.size() <= j) {
+                yKeyMaps.add(new HashMap<>(8));
+            }
+            Map<String, String> yKeyMap = yKeyMaps.get(j);
+            String uuid = UUID.randomUUID().toString();
+            yKeyMap.put(key, uuid);
+            List<Object> temp;
+            if (i + pageSize > pageList.size()) {
+                temp = new ArrayList<>(pageList.subList(i, pageList.size() - 1));
+            } else {
+                temp = new ArrayList<>(pageList.subList(i, i + pageSize));
+            }
+            data.put(uuid, temp);
+        }
     }
 
     private void replace(Map<String, Object> data, List<Map<String, String>> xKeyMaps, List<Map<String, String>> yKeyMaps){
@@ -275,22 +292,22 @@ public abstract class BaseExcelTemplateFillUtils implements ExcelTemplateFillUti
                 }
                 newCell = newRow.createCell((short) j);
                 newCell.setCellStyle(fromCell.getCellStyle());
-                int cType = fromCell.getCellType();
-                newCell.setCellType(cType);
-                switch (cType) {
-                    case Cell.CELL_TYPE_STRING:
+                CellType cellTypeEnum = fromCell.getCellTypeEnum();
+                newCell.setCellType(cellTypeEnum);
+                switch (cellTypeEnum) {
+                    case STRING:
                         newCell.setCellValue(fromCell.getRichStringCellValue());
                         break;
-                    case Cell.CELL_TYPE_NUMERIC:
+                    case NUMERIC:
                         newCell.setCellValue(fromCell.getNumericCellValue());
                         break;
-                    case Cell.CELL_TYPE_FORMULA:
+                    case FORMULA:
                         newCell.setCellValue(fromCell.getCellFormula());
                         break;
-                    case Cell.CELL_TYPE_BOOLEAN:
+                    case BOOLEAN:
                         newCell.setCellValue(fromCell.getBooleanCellValue());
                         break;
-                    case Cell.CELL_TYPE_ERROR:
+                    case ERROR:
                         newCell.setCellValue(fromCell.getErrorCellValue());
                         break;
                     default:
@@ -600,42 +617,14 @@ public abstract class BaseExcelTemplateFillUtils implements ExcelTemplateFillUti
                 Matcher matcherText = ExcelTemplateGrammarEnum.TEXT.getFind().matcher(text);
                 boolean isText = matcherText.find();
                 if (isText) {
-                    ExcelTemplateGrammar grammar = new ExcelTemplateGrammar();
-                    grammar.setGrammar(ExcelTemplateGrammarEnum.TEXT);
-                    String group = matcherText.group();
-                    Matcher matcher = ExcelTemplateGrammar.ATTR_PATTERN.matcher(group);
-                    grammar.setKey(group.replaceAll(ExcelTemplateGrammar.ATTR_PATTERN.pattern(), ""));
-                    if (matcher.find()) {
-                        String attr = matcher.group();
-                        JSONObject jsonObject = JSONObject.parseObject(attr);
-                        String dateFormat = jsonObject.getString("dateFormat");
-                        grammar.setDateFormat(dateFormat);
-                    }
-                    return grammar;
+                    return analyseText(matcherText);
                 }
                 break;
             case FOR_X:
                 Matcher matcherForX = ExcelTemplateGrammarEnum.FOR_X.getFind().matcher(text);
                 boolean isForX = matcherForX.find();
                 if (isForX) {
-                    ExcelTemplateForGrammar grammar = new ExcelTemplateForGrammar();
-                    grammar.setGrammar(ExcelTemplateGrammarEnum.FOR_X);
-                    String group = matcherForX.group();
-                    grammar.setKey(group.replaceAll(ExcelTemplateGrammar.ATTR_PATTERN.pattern(), "")
-                            .replaceAll("<.+>", ""));
-                    Matcher matcher = ExcelTemplateGrammar.ATTR_PATTERN.matcher(group);
-                    if (matcher.find()) {
-                        String attr = matcher.group();
-                        extractAttr(grammar, attr);
-                    }
-                    if (ExcelTemplateForGrammar.LIST_ITEM_KEY_PATTERN.matcher(group).find()) {
-                        grammar.setItemKey(
-                                group.replaceAll(ExcelTemplateGrammar.ATTR_PATTERN.pattern(), "")
-                                        .replaceAll(".+(?=<.+>)", "")
-                                        .replaceAll("[<>]", "")
-                        );
-                    }
-                    return grammar;
+                    return analyseForX(matcherForX);
                 }
                 break;
             case FOR_Y:
@@ -701,6 +690,54 @@ public abstract class BaseExcelTemplateFillUtils implements ExcelTemplateFillUti
                 return null;
         }
         return null;
+    }
+
+    /**
+     * 分析内容
+     *
+     * @param matcherText
+     * @return
+     */
+    private ExcelTemplateGrammar analyseText(Matcher matcherText) {
+        ExcelTemplateGrammar grammar = new ExcelTemplateGrammar();
+        grammar.setGrammar(ExcelTemplateGrammarEnum.TEXT);
+        String group = matcherText.group();
+        Matcher matcher = ExcelTemplateGrammar.ATTR_PATTERN.matcher(group);
+        grammar.setKey(group.replaceAll(ExcelTemplateGrammar.ATTR_PATTERN.pattern(), ""));
+        if (matcher.find()) {
+            String attr = matcher.group();
+            JSONObject jsonObject = JSONObject.parseObject(attr);
+            String dateFormat = jsonObject.getString("dateFormat");
+            grammar.setDateFormat(dateFormat);
+        }
+        return grammar;
+    }
+
+    /**
+     * 分析内容
+     *
+     * @param matcherForX
+     * @return
+     */
+    private ExcelTemplateGrammar analyseForX(Matcher matcherForX) {
+        ExcelTemplateForGrammar grammar = new ExcelTemplateForGrammar();
+        grammar.setGrammar(ExcelTemplateGrammarEnum.FOR_X);
+        String group = matcherForX.group();
+        grammar.setKey(group.replaceAll(ExcelTemplateGrammar.ATTR_PATTERN.pattern(), "")
+                .replaceAll("<.+>", ""));
+        Matcher matcher = ExcelTemplateGrammar.ATTR_PATTERN.matcher(group);
+        if (matcher.find()) {
+            String attr = matcher.group();
+            extractAttr(grammar, attr);
+        }
+        if (ExcelTemplateForGrammar.LIST_ITEM_KEY_PATTERN.matcher(group).find()) {
+            grammar.setItemKey(
+                    group.replaceAll(ExcelTemplateGrammar.ATTR_PATTERN.pattern(), "")
+                            .replaceAll(".+(?=<.+>)", "")
+                            .replaceAll("[<>]", "")
+            );
+        }
+        return grammar;
     }
 
     /**
