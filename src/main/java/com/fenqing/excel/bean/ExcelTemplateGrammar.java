@@ -1,5 +1,6 @@
 package com.fenqing.excel.bean;
 
+import com.fenqing.excel.annotation.ExcelTemplateSerialize;
 import com.fenqing.excel.enumeration.ExcelTemplateGrammarEnum;
 import lombok.Builder;
 import lombok.Data;
@@ -18,6 +19,13 @@ public class ExcelTemplateGrammar {
 
     private String key;
 
+    @ExcelTemplateSerialize
     private String dateFormat;
+
+    @ExcelTemplateSerialize
+    private String color;
+
+    @ExcelTemplateSerialize
+    private String bgColor;
 
 }

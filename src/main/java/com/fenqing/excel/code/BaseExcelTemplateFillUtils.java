@@ -2,6 +2,7 @@ package com.fenqing.excel.code;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.fenqing.excel.annotation.ExcelTemplateSerialize;
 import com.fenqing.excel.bean.ExcelPageList;
 import com.fenqing.excel.bean.ExcelTemplateForCodeGrammar;
 import com.fenqing.excel.bean.ExcelTemplateForGrammar;
@@ -14,7 +15,11 @@ import com.fenqing.time.code.TimeUtils;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 import java.io.*;
+import java.lang.reflect.Field;
 import java.text.DateFormat;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -30,6 +35,8 @@ public abstract class BaseExcelTemplateFillUtils implements ExcelTemplateFillUti
      * excel工作簿
      */
     protected Workbook workbook;
+
+    private ScriptEngine ENGINE = new ScriptEngineManager().getEngineByName("Nashorn");
 
     @Override
     public InputStream fill(Map<String, Object> data) {
@@ -86,6 +93,54 @@ public abstract class BaseExcelTemplateFillUtils implements ExcelTemplateFillUti
         }
         Sheet nowSheet = workbook.getSheetAt(0);
         //替换
+        if (!xKeyMaps.isEmpty() && !yKeyMaps.isEmpty()) {
+            replaceXY(xKeyMaps, yKeyMaps, nowSheet);
+        } else if (xKeyMaps.isEmpty()) {
+            replaceY(yKeyMaps, nowSheet);
+        }else {
+            replaceX(xKeyMaps, nowSheet);
+        }
+        if (!xKeyMaps.isEmpty() || !yKeyMaps.isEmpty()) {
+            workbook.removeSheetAt(0);
+        }
+        return new ArrayList<List<Map<String, String>>>() {{
+            add(xKeyMaps);
+            add(yKeyMaps);
+        }};
+    }
+
+    public void replaceX(List<Map<String, String>> xKeyMaps, Sheet nowSheet) {
+        for (Map<String, String> xKeyMap : xKeyMaps) {
+            Sheet sheet = workbook.createSheet();
+            copySheet(nowSheet, sheet, nowSheet.getFirstRowNum(), nowSheet.getLastRowNum());
+            int lastRowNum = sheet.getLastRowNum();
+            for (int i = 0; i < lastRowNum; i++) {
+                Row row = sheet.getRow(i);
+                if (row != null) {
+                    short lastCellNum = row.getLastCellNum();
+                    for (int j = 0; j < lastCellNum; j++) {
+                        Cell cell = row.getCell(j);
+                        if (cell != null) {
+                            String value = cell.getStringCellValue();
+                            ExcelTemplateGrammar analyse = analyse(value, ExcelTemplateGrammarEnum.FOR_X);
+                            if (analyse == null) {
+                                analyse = analyse(cell.getStringCellValue(), ExcelTemplateGrammarEnum.FOR_CODE_X);
+                            }
+                            if (analyse != null) {
+                                String key = analyse.getKey();
+                                if (xKeyMap.containsKey(key)) {
+                                    String s = value.replaceAll(key, xKeyMap.get(key));
+                                    cell.setCellValue(s);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public void replaceXY(List<Map<String, String>> xKeyMaps, List<Map<String, String>> yKeyMaps, Sheet nowSheet) {
         for (Map<String, String> xKeyMap : xKeyMaps) {
             for (int yi = 0; yi < yKeyMaps.size(); yi++) {
                 Map<String, String> yKeyMap = yKeyMaps.get(yi);
@@ -128,13 +183,38 @@ public abstract class BaseExcelTemplateFillUtils implements ExcelTemplateFillUti
                 }
             }
         }
-        if(!xKeyMaps.isEmpty() && !yKeyMaps.isEmpty()){
-            workbook.removeSheetAt(0);
+    }
+
+    public void replaceY(List<Map<String, String>> yKeyMaps, Sheet nowSheet) {
+        for (int yi = 0; yi < yKeyMaps.size(); yi++) {
+            Map<String, String> yKeyMap = yKeyMaps.get(yi);
+            Sheet sheet = workbook.createSheet();
+            copySheet(nowSheet, sheet, nowSheet.getFirstRowNum(), nowSheet.getLastRowNum());
+            int lastRowNum = sheet.getLastRowNum();
+            for (int i = 0; i < lastRowNum; i++) {
+                Row row = sheet.getRow(i);
+                if (row != null) {
+                    short lastCellNum = row.getLastCellNum();
+                    for (int j = 0; j < lastCellNum; j++) {
+                        Cell cell = row.getCell(j);
+                        if (cell != null) {
+                            String value = cell.getStringCellValue();
+                            ExcelTemplateGrammar analyse = analyse(value, ExcelTemplateGrammarEnum.FOR_Y);
+                            if (analyse == null) {
+                                analyse = analyse(cell.getStringCellValue(), ExcelTemplateGrammarEnum.FOR_CODE_Y);
+                            }
+                            if (analyse != null) {
+                                String key = analyse.getKey();
+                                if (yKeyMap.containsKey(key)) {
+                                    String s = value.replaceAll(key, yKeyMap.get(key));
+                                    cell.setCellValue(s);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
-        return new ArrayList<List<Map<String, String>>>(){{
-            add(xKeyMaps);
-            add(yKeyMaps);
-        }};
     }
 
     /**
@@ -356,7 +436,7 @@ public abstract class BaseExcelTemplateFillUtils implements ExcelTemplateFillUti
                                     val = DataUtils.getValueDeep(next, grammar.getItemKey());
                                 }
                                 Cell newCell = newCell(sheet, cell, x, y);
-                                setCellValue(newCell, buildExp((ExcelTemplateForGrammar) val), grammar);
+                                setCellValue(newCell, buildExp((ExcelTemplateForGrammar) val), grammar, false);
                                 if ("x".equals(move)) {
                                     x++;
                                 } else {
@@ -396,7 +476,7 @@ public abstract class BaseExcelTemplateFillUtils implements ExcelTemplateFillUti
                         if (analyse != null) {
                             //获取数据
                             Object value = DataUtils.getValueDeep(data, analyse.getKey());
-                            setCellValue(cell, value, analyse);
+                            setCellValue(cell, value, analyse, true);
                         }
                     }
                 }
@@ -451,7 +531,7 @@ public abstract class BaseExcelTemplateFillUtils implements ExcelTemplateFillUti
                             cell.setCellValue("");
                             for (int i = 0; i < collection.size(); i++) {
                                 Cell newCell = newCell(sheet, cell, x, y);
-                                setCellValue(newCell, buildExp(i, grammar), grammar);
+                                setCellValue(newCell, buildExp(i, grammar), grammar, false);
                                 if ("x".equals(move)) {
                                     x++;
                                 } else {
@@ -539,11 +619,34 @@ public abstract class BaseExcelTemplateFillUtils implements ExcelTemplateFillUti
             sb.append(".")
                     .append(grammar.getItemKey());
         }
-        Map<String, Object> attr = new HashMap<>(8);
-        attr.put("dateFormat", grammar.getDateFormat());
+        Map<String, Object> attr = getAttr(grammar);
         sb.append(JSON.toJSONString(attr));
         sb.append("}");
         return sb.toString();
+    }
+
+    private Map<String, Object> getAttr(ExcelTemplateGrammar grammar){
+        Map<String, Object> map = new HashMap<>(8);
+        Class clazz = grammar.getClass();
+        while (ExcelTemplateGrammar.class.isAssignableFrom(clazz)){
+            Field[] declaredFields = clazz.getDeclaredFields();
+            for (Field declaredField : declaredFields) {
+                declaredField.setAccessible(true);
+                boolean annotationPresent = declaredField.isAnnotationPresent(ExcelTemplateSerialize.class);
+                if(annotationPresent){
+                    try {
+                        Object o1 = declaredField.get(grammar);
+                        if(o1 != null){
+                            map.put(declaredField.getName(), o1);
+                        }
+                    } catch (IllegalAccessException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+            clazz = clazz.getSuperclass();
+        }
+        return map;
     }
 
     /**
@@ -577,10 +680,38 @@ public abstract class BaseExcelTemplateFillUtils implements ExcelTemplateFillUti
      * @param cell
      * @param o
      */
-    private void setCellValue(Cell cell, Object o, ExcelTemplateGrammar grammar) {
+    private void setCellValue(Cell cell, Object o, ExcelTemplateGrammar grammar, boolean isFinally) {
         String value = cell.getStringCellValue();
         String text = objectToText(o, grammar);
         ExcelTemplateGrammarEnum[] values = ExcelTemplateGrammarEnum.values();
+        if(isFinally){
+            String color = grammar.getColor();
+            Map<String, Object> data = new HashMap<>(8);
+            data.put("key之val", o);
+            if(color != null){
+                try {
+                    Object eval = ENGINE.eval(ExcelTemplateFillUtils.string2JsCode(color, data));
+                    color = String.valueOf(eval);
+                    int[] rgb = ExcelTemplateFillUtils.convertHexToRgb(color);
+                    setColor(cell, rgb);
+                } catch (ScriptException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+
+            String bgColor = grammar.getBgColor();
+            if(bgColor != null){
+                try {
+                    Object eval = ENGINE.eval(ExcelTemplateFillUtils.string2JsCode(bgColor, data));
+                    bgColor = String.valueOf(eval);
+                    int[] rgb = ExcelTemplateFillUtils.convertHexToRgb(bgColor);
+                    setBgColor(cell, rgb);
+                } catch (ScriptException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+
         value = value.replaceAll(grammar.getGrammar().getMatch().pattern(), text.replaceAll("\\$", "\\\\\\$"));
         if (StringUtils.isEmpty(value)) {
             value = text;
@@ -604,6 +735,20 @@ public abstract class BaseExcelTemplateFillUtils implements ExcelTemplateFillUti
 
         return text;
     }
+
+    /**
+     * 设置颜色
+     * @param cell
+     * @param rgb
+     */
+    public abstract void setColor(Cell cell, int[] rgb);
+
+    /**
+     * 设置颜色
+     * @param cell
+     * @param rgb
+     */
+    public abstract void setBgColor(Cell cell, int[] rgb);
 
     /**
      * 分析内容
@@ -707,8 +852,10 @@ public abstract class BaseExcelTemplateFillUtils implements ExcelTemplateFillUti
         if (matcher.find()) {
             String attr = matcher.group();
             JSONObject jsonObject = JSONObject.parseObject(attr);
-            String dateFormat = jsonObject.getString("dateFormat");
-            grammar.setDateFormat(dateFormat);
+            Set<String> keySet = jsonObject.keySet();
+            for (String key : keySet){
+                DataUtils.setValue(grammar, key, jsonObject.get(key));
+            }
         }
         return grammar;
     }
