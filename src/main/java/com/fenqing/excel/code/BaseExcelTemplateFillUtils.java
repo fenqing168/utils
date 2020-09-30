@@ -686,7 +686,7 @@ public abstract class BaseExcelTemplateFillUtils implements ExcelTemplateFillUti
         ExcelTemplateGrammarEnum[] values = ExcelTemplateGrammarEnum.values();
         if(isFinally){
             String color = grammar.getColor();
-            Map<String, Object> data = new HashMap<>(8);
+            Map<String, Object> data = new HashMap<>(4);
             data.put("key之val", o);
             if(color != null){
                 try {
